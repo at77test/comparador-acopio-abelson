@@ -396,6 +396,22 @@ body{
   font-size:.95rem;
   margin-right:4px;
 }
+.cmp-row-right{
+  display:flex;
+  align-items:baseline;
+  gap:8px;
+  flex-shrink:0;
+}
+.cmp-row-diff{
+  font-family:"IBM Plex Mono",monospace;
+  font-size:.72rem;
+  font-weight:600;
+  color:var(--neg);
+  background:var(--neg-bg);
+  border-radius:20px;
+  padding:2px 8px;
+  white-space:nowrap;
+}
 
 /* ── STATUS TAGS ── */
 .res-tag{
@@ -1421,10 +1437,14 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
         var esMejor = c.disponible && c.precio != null && minPrecio != null && Math.abs(c.precio - minPrecio) < 0.005 && disponibles.length >= 2;
         var esCC = c.titulo === 'Cuenta corriente';
         var sub = esCC ? 'Cuenta corriente' : 'Acopio';
-        var valorHtml, valorClase;
+        var valorHtml, valorClase, diffHtml = '';
         if(c.disponible && c.precio != null){
           valorHtml = fmtMoney(c.precio);
           valorClase = esMejor ? 'cv-ok' : 'cv-zero';
+          if(!esMejor && minPrecio != null && minPrecio > 0 && disponibles.length >= 2){
+            var pctDiff = (c.precio - minPrecio) / minPrecio * 100;
+            diffHtml = '<span class="cmp-row-diff">+' + pctDiff.toFixed(1) + '%</span>';
+          }
         } else {
           valorHtml = 'No está en esta lista';
           valorClase = 'cv-empty';
@@ -1434,7 +1454,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
           '<span class="cmp-row-title">' + (esMejor ? '<span class="cmp-row-medal">&#127942;</span>' : '') + escapeHtml(c.titulo) + '</span>' +
           '<span class="cmp-row-sub">' + sub + '</span>' +
           '</div>' +
-          '<div class="cmp-row-value ' + valorClase + '">' + valorHtml + '</div>' +
+          '<div class="cmp-row-right">' + diffHtml + '<div class="cmp-row-value ' + valorClase + '">' + valorHtml + '</div></div>' +
           '</div>';
       }).join('') +
       '</div></div>';
