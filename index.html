@@ -343,6 +343,60 @@ body{
 .cv-neg{color:var(--neg)}
 .cv-zero{color:var(--zero)}
 
+/* ── COMPARACIÓN VERTICAL (cta cte + N acopios) ── */
+.cmp-list{
+  display:flex;
+  flex-direction:column;
+}
+.cmp-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  padding:14px 20px;
+  border-bottom:1px solid var(--gray-100);
+}
+.cmp-row:last-child{border-bottom:none}
+.cmp-row.cmp-mejor{background:var(--ok-bg)}
+.cmp-row-label{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  min-width:0;
+}
+.cmp-row-title{
+  font-size:.72rem;
+  font-weight:600;
+  color:var(--gray-700);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width:220px;
+}
+.cmp-row-sub{
+  font-size:.6rem;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--gray-500);
+}
+.cmp-row-value{
+  font-family:"IBM Plex Mono",monospace;
+  font-size:1.5rem;
+  font-weight:600;
+  text-align:right;
+  flex-shrink:0;
+}
+.cmp-row-value.cv-empty{
+  font-family:"IBM Plex Sans",sans-serif;
+  font-size:.78rem;
+  font-weight:500;
+  color:var(--gray-300);
+}
+.cmp-row-medal{
+  font-size:.95rem;
+  margin-right:4px;
+}
+
 /* ── STATUS TAGS ── */
 .res-tag{
   display:inline-flex;
@@ -1351,17 +1405,37 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     }
 
     var gridCols = 'repeat(' + columnas.length + ', minmax(130px, 1fr))';
+    // Orden: primero las que tienen precio (de más barata a más cara), después las que no están en esa fuente
+    var columnasOrdenadas = columnas.slice().sort(function(a, b){
+      var aOk = a.disponible && a.precio != null;
+      var bOk = b.disponible && b.precio != null;
+      if(aOk && bOk) return a.precio - b.precio;
+      if(aOk) return -1;
+      if(bOk) return 1;
+      return 0;
+    });
     html += '<div class="uni-suc-block">' +
       '<div class="uni-suc-header"><span class="uni-suc-name">Comparación de precios</span>' + tagHeader + '</div>' +
-      '<div class="uni-stock-row" style="grid-template-columns:' + gridCols + ';">' +
-      columnas.map(function(c, idx){
+      '<div class="cmp-list">' +
+      columnasOrdenadas.map(function(c){
         var esMejor = c.disponible && c.precio != null && minPrecio != null && Math.abs(c.precio - minPrecio) < 0.005 && disponibles.length >= 2;
-        var borderRight = idx < columnas.length - 1 ? '' : 'border-right:none;';
-        var valorHtml = c.disponible && c.precio != null
-          ? fmtMoney(c.precio)
-          : '<span style="font-size:.9rem;color:var(--gray-300);">No está en esta lista</span>';
-        return '<div class="uni-cell" style="' + borderRight + '"><div class="cell-label">' + escapeHtml(c.titulo) + '</div>' +
-          '<div class="cell-value ' + (esMejor ? 'cv-ok' : 'cv-zero') + '">' + valorHtml + '</div></div>';
+        var esCC = c.titulo === 'Cuenta corriente';
+        var sub = esCC ? 'Cuenta corriente' : 'Acopio';
+        var valorHtml, valorClase;
+        if(c.disponible && c.precio != null){
+          valorHtml = fmtMoney(c.precio);
+          valorClase = esMejor ? 'cv-ok' : 'cv-zero';
+        } else {
+          valorHtml = 'No está en esta lista';
+          valorClase = 'cv-empty';
+        }
+        return '<div class="cmp-row' + (esMejor ? ' cmp-mejor' : '') + '">' +
+          '<div class="cmp-row-label">' +
+          '<span class="cmp-row-title">' + (esMejor ? '<span class="cmp-row-medal">&#127942;</span>' : '') + escapeHtml(c.titulo) + '</span>' +
+          '<span class="cmp-row-sub">' + sub + '</span>' +
+          '</div>' +
+          '<div class="cmp-row-value ' + valorClase + '">' + valorHtml + '</div>' +
+          '</div>';
       }).join('') +
       '</div></div>';
 
